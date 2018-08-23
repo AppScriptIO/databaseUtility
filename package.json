@@ -1,0 +1,5 @@
+{
+  "name": "@dependency/databaseUtility",
+  "main": "./source/entrypoint.js",
+  "version": "1.0.0"
+}
