@@ -1,5 +1,5 @@
 import r from 'rethinkdb'
-import { curryNamed } from '../../namedCurry.js'
+import { curryNamed } from '@dependency/namedCurry'
 import assert from "assert"
 
 // IMPORTANT: when false value (null, empty, undefined) is passed as key, the query will get all keys in db document.
