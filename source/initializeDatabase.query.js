@@ -50,7 +50,13 @@ export async function createTableAndInsertData(
                     })
                     .catch(error => console.log(error))
             })
-            .catch(error => console.log(`📢 ${tableData.databaseTableName} table already exists.`))
+            .catch(error => {
+                if(error.name == 'ReqlOpFailedError') {
+                    console.log(`📢 ${tableData.databaseTableName} table already exists.`) 
+                } else {
+                    console.error(error)
+                }
+            })
 
         // create index
         if(tableData.index) {
