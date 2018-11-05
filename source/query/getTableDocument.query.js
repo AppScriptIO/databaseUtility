@@ -5,6 +5,8 @@ import assert from "assert"
 // IMPORTANT: when false value (null, empty, undefined) is passed as key, the query will get all keys in db document.
 function getTableDocument(databaseName, tableName) {
     return async function getCondition(connection, key) {
+        assert(connection, 'Rethinkdb `connection` should be set.')
+        assert.strictEqual(Object.getPrototypeOf(connection).constructor.name, 'TcpConnection')
         let result;
         if(key) {
             result = await r
@@ -30,6 +32,8 @@ function getTableDocument(databaseName, tableName) {
 }
 
 async function getTableDocumentAllParams({ databaseName, tableName, connection, key }) {
+    assert(connection, 'Rethinkdb `connection` should be set.')
+    assert.strictEqual(Object.getPrototypeOf(connection).constructor.name, 'TcpConnection')
     let result;
     if(key) {
         result = await r
@@ -53,7 +57,7 @@ async function getTableDocumentAllParams({ databaseName, tableName, connection, 
     }
 }
 
-let requiredArgument = ['databaseName', 'tableName', 'connection', /* 'key' */ ] // commented out are optional
+let requiredArgument = ['databaseName', 'tableName', 'connection', 'key' ] // commented out are optional
 let curried = curryNamed(requiredArgument, getTableDocumentAllParams) // 
 
 export { getTableDocument as default, curried}
