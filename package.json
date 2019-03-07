@@ -4,5 +4,9 @@
   "version": "1.0.0",
   "dependencies": {
     "@dependency/namedCurry": "https://github.com/AppScriptIO/namedCurry"
+  },
+  "devDependencies": {
+    "eslint": "^5.15.1",
+    "babel-eslint": "^10.0.1"
   }
 }
