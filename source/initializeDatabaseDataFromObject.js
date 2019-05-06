@@ -1,12 +1,26 @@
-import { createDatabase, createTableAndInsertData } from "@dependency/databaseUtility/source/initializeDatabase.query.js";
-import rethinkDB from 'rethinkdb'
+"use strict";
 
-function initializeDatabaseData({databaseData, connection}) {
-    return createDatabase('webappSetting', connection, rethinkDB)
-        .then(async () => {
-            await createTableAndInsertData('webappSetting', databaseData.webappSetting, connection, rethinkDB)
-        })
-        .catch(error=> { throw error })
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _initializeDatabaseQuery = require("@dependency/databaseUtility/source/initializeDatabase.query.js");
+
+var _rethinkdb = _interopRequireDefault(require("rethinkdb"));
+
+function initializeDatabaseData({
+  databaseData,
+  connection
+}) {
+  return (0, _initializeDatabaseQuery.createDatabase)('webappSetting', connection, _rethinkdb.default).then(async () => {
+    await (0, _initializeDatabaseQuery.createTableAndInsertData)('webappSetting', databaseData.webappSetting, connection, _rethinkdb.default);
+  }).catch(error => {
+    throw error;
+  });
 }
 
-export default initializeDatabaseData
+var _default = initializeDatabaseData;
+exports.default = _default;

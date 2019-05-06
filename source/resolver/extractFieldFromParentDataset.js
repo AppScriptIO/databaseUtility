@@ -1,13 +1,20 @@
-import { curried as getTableDocumentCurried } from "./query/getTableDocument.query.js";
-import r from 'rethinkdb'
+"use strict";
 
-export default function({} = {}) {
-  return async function({ portClassInstance, parentResult, args }) {
-    let connection = portClassInstance.constructor.rethinkdbConnection
-    let context = portClassInstance.context
-    let parameter = context.request.query
-    let databaseName = 'webappContent'
-    return parentResult[args.fieldToExtract]
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = _default;
 
-  }
+function _default({} = {}) {
+  return async function ({
+    portClassInstance,
+    parentResult,
+    args
+  }) {
+    let connection = portClassInstance.constructor.rethinkdbConnection;
+    let context = portClassInstance.context;
+    let parameter = context.request.query;
+    let databaseName = 'webappContent';
+    return parentResult[args.fieldToExtract];
+  };
 }
