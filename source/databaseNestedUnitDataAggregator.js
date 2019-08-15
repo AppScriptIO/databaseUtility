@@ -1,37 +1,38 @@
-import filesystem from 'fs'
-import path from 'path'
+"use strict";var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _fs = _interopRequireDefault(require("fs"));
+var _path = _interopRequireDefault(require("path"));var _default =
 
-export default ({
-    localPath,
-    implementation,
-    dataArray
-}) => {
-    let tablePrefix = `${implementation}_`
-    
-    let settingArray = []
-    for (let value of dataArray) {
-        let setting = { databaseTableName: value }
-        let local = [], shared = []
-        {
-            // let modulePath = path.dirname(require.resolve('appscript'))
-            let filePath = path.resolve(path.join(__dirname, '../../', `databaseData/${implementation}/${value}.js`))
-            if(filesystem.existsSync(filePath)) {
-                shared = require(filePath).default
-            } else {
-                console.log(`• dbData - shared data ${filePath} not present, skipping.`)
-            }
-        }
-        {
-            let filePath = `${localPath}/${value}.js`
-            if(filesystem.existsSync(filePath)) local = require(filePath).default
-        }
-        setting.data = [...shared, ...local]
-        if(setting.data.length < 1) console.log(implementation + ' ' + value)
-        settingArray.push(setting)
+({
+  localPath,
+  implementation,
+  dataArray }) =>
+{
+  let tablePrefix = `${implementation}_`;
+
+  let settingArray = [];
+  for (let value of dataArray) {
+    let setting = { databaseTableName: value };
+    let local = [],shared = [];
+    {
+
+      let filePath = _path.default.resolve(_path.default.join(__dirname, '../../', `databaseData/${implementation}/${value}.js`));
+      if (_fs.default.existsSync(filePath)) {
+        shared = require(filePath).default;
+      } else {
+        console.log(`• dbData - shared data ${filePath} not present, skipping.`);
+      }
     }
+    {
+      let filePath = `${localPath}/${value}.js`;
+      if (_fs.default.existsSync(filePath)) local = require(filePath).default;
+    }
+    setting.data = [...shared, ...local];
+    if (setting.data.length < 1) console.log(implementation + ' ' + value);
+    settingArray.push(setting);
+  }
 
-    return settingArray.map(object => {
-        object.databaseTableName = tablePrefix.concat(object.databaseTableName)
-        return object
-    })
-}
+  return settingArray.map(object => {
+    object.databaseTableName = tablePrefix.concat(object.databaseTableName);
+    return object;
+  });
+};exports.default = _default;
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uL3NvdXJjZS9kYXRhYmFzZU5lc3RlZFVuaXREYXRhQWdncmVnYXRvci5qcyJdLCJuYW1lcyI6WyJsb2NhbFBhdGgiLCJpbXBsZW1lbnRhdGlvbiIsImRhdGFBcnJheSIsInRhYmxlUHJlZml4Iiwic2V0dGluZ0FycmF5IiwidmFsdWUiLCJzZXR0aW5nIiwiZGF0YWJhc2VUYWJsZU5hbWUiLCJsb2NhbCIsInNoYXJlZCIsImZpbGVQYXRoIiwicGF0aCIsInJlc29sdmUiLCJqb2luIiwiX19kaXJuYW1lIiwiZmlsZXN5c3RlbSIsImV4aXN0c1N5bmMiLCJyZXF1aXJlIiwiZGVmYXVsdCIsImNvbnNvbGUiLCJsb2ciLCJkYXRhIiwibGVuZ3RoIiwicHVzaCIsIm1hcCIsIm9iamVjdCIsImNvbmNhdCJdLCJtYXBwaW5ncyI6InlMQUFBO0FBQ0Esb0Q7O0FBRWUsQ0FBQztBQUNaQSxFQUFBQSxTQURZO0FBRVpDLEVBQUFBLGNBRlk7QUFHWkMsRUFBQUEsU0FIWSxFQUFEO0FBSVQ7QUFDRixNQUFJQyxXQUFXLEdBQUksR0FBRUYsY0FBZSxHQUFwQzs7QUFFQSxNQUFJRyxZQUFZLEdBQUcsRUFBbkI7QUFDQSxPQUFLLElBQUlDLEtBQVQsSUFBa0JILFNBQWxCLEVBQTZCO0FBQ3pCLFFBQUlJLE9BQU8sR0FBRyxFQUFFQyxpQkFBaUIsRUFBRUYsS0FBckIsRUFBZDtBQUNBLFFBQUlHLEtBQUssR0FBRyxFQUFaLENBQWdCQyxNQUFNLEdBQUcsRUFBekI7QUFDQTs7QUFFSSxVQUFJQyxRQUFRLEdBQUdDLGNBQUtDLE9BQUwsQ0FBYUQsY0FBS0UsSUFBTCxDQUFVQyxTQUFWLEVBQXFCLFFBQXJCLEVBQWdDLGdCQUFlYixjQUFlLElBQUdJLEtBQU0sS0FBdkUsQ0FBYixDQUFmO0FBQ0EsVUFBR1UsWUFBV0MsVUFBWCxDQUFzQk4sUUFBdEIsQ0FBSCxFQUFvQztBQUNoQ0QsUUFBQUEsTUFBTSxHQUFHUSxPQUFPLENBQUNQLFFBQUQsQ0FBUCxDQUFrQlEsT0FBM0I7QUFDSCxPQUZELE1BRU87QUFDSEMsUUFBQUEsT0FBTyxDQUFDQyxHQUFSLENBQWEsMEJBQXlCVixRQUFTLHlCQUEvQztBQUNIO0FBQ0o7QUFDRDtBQUNJLFVBQUlBLFFBQVEsR0FBSSxHQUFFVixTQUFVLElBQUdLLEtBQU0sS0FBckM7QUFDQSxVQUFHVSxZQUFXQyxVQUFYLENBQXNCTixRQUF0QixDQUFILEVBQW9DRixLQUFLLEdBQUdTLE9BQU8sQ0FBQ1AsUUFBRCxDQUFQLENBQWtCUSxPQUExQjtBQUN2QztBQUNEWixJQUFBQSxPQUFPLENBQUNlLElBQVIsR0FBZSxDQUFDLEdBQUdaLE1BQUosRUFBWSxHQUFHRCxLQUFmLENBQWY7QUFDQSxRQUFHRixPQUFPLENBQUNlLElBQVIsQ0FBYUMsTUFBYixHQUFzQixDQUF6QixFQUE0QkgsT0FBTyxDQUFDQyxHQUFSLENBQVluQixjQUFjLEdBQUcsR0FBakIsR0FBdUJJLEtBQW5DO0FBQzVCRCxJQUFBQSxZQUFZLENBQUNtQixJQUFiLENBQWtCakIsT0FBbEI7QUFDSDs7QUFFRCxTQUFPRixZQUFZLENBQUNvQixHQUFiLENBQWlCQyxNQUFNLElBQUk7QUFDOUJBLElBQUFBLE1BQU0sQ0FBQ2xCLGlCQUFQLEdBQTJCSixXQUFXLENBQUN1QixNQUFaLENBQW1CRCxNQUFNLENBQUNsQixpQkFBMUIsQ0FBM0I7QUFDQSxXQUFPa0IsTUFBUDtBQUNILEdBSE0sQ0FBUDtBQUlILEMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgZmlsZXN5c3RlbSBmcm9tICdmcydcbmltcG9ydCBwYXRoIGZyb20gJ3BhdGgnXG5cbmV4cG9ydCBkZWZhdWx0ICh7XG4gICAgbG9jYWxQYXRoLFxuICAgIGltcGxlbWVudGF0aW9uLFxuICAgIGRhdGFBcnJheVxufSkgPT4ge1xuICAgIGxldCB0YWJsZVByZWZpeCA9IGAke2ltcGxlbWVudGF0aW9ufV9gXG4gICAgXG4gICAgbGV0IHNldHRpbmdBcnJheSA9IFtdXG4gICAgZm9yIChsZXQgdmFsdWUgb2YgZGF0YUFycmF5KSB7XG4gICAgICAgIGxldCBzZXR0aW5nID0geyBkYXRhYmFzZVRhYmxlTmFtZTogdmFsdWUgfVxuICAgICAgICBsZXQgbG9jYWwgPSBbXSwgc2hhcmVkID0gW11cbiAgICAgICAge1xuICAgICAgICAgICAgLy8gbGV0IG1vZHVsZVBhdGggPSBwYXRoLmRpcm5hbWUocmVxdWlyZS5yZXNvbHZlKCdhcHBzY3JpcHQnKSlcbiAgICAgICAgICAgIGxldCBmaWxlUGF0aCA9IHBhdGgucmVzb2x2ZShwYXRoLmpvaW4oX19kaXJuYW1lLCAnLi4vLi4vJywgYGRhdGFiYXNlRGF0YS8ke2ltcGxlbWVudGF0aW9ufS8ke3ZhbHVlfS5qc2ApKVxuICAgICAgICAgICAgaWYoZmlsZXN5c3RlbS5leGlzdHNTeW5jKGZpbGVQYXRoKSkge1xuICAgICAgICAgICAgICAgIHNoYXJlZCA9IHJlcXVpcmUoZmlsZVBhdGgpLmRlZmF1bHRcbiAgICAgICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgICAgICAgY29uc29sZS5sb2coYOKAoiBkYkRhdGEgLSBzaGFyZWQgZGF0YSAke2ZpbGVQYXRofSBub3QgcHJlc2VudCwgc2tpcHBpbmcuYClcbiAgICAgICAgICAgIH1cbiAgICAgICAgfVxuICAgICAgICB7XG4gICAgICAgICAgICBsZXQgZmlsZVBhdGggPSBgJHtsb2NhbFBhdGh9LyR7dmFsdWV9LmpzYFxuICAgICAgICAgICAgaWYoZmlsZXN5c3RlbS5leGlzdHNTeW5jKGZpbGVQYXRoKSkgbG9jYWwgPSByZXF1aXJlKGZpbGVQYXRoKS5kZWZhdWx0XG4gICAgICAgIH1cbiAgICAgICAgc2V0dGluZy5kYXRhID0gWy4uLnNoYXJlZCwgLi4ubG9jYWxdXG4gICAgICAgIGlmKHNldHRpbmcuZGF0YS5sZW5ndGggPCAxKSBjb25zb2xlLmxvZyhpbXBsZW1lbnRhdGlvbiArICcgJyArIHZhbHVlKVxuICAgICAgICBzZXR0aW5nQXJyYXkucHVzaChzZXR0aW5nKVxuICAgIH1cblxuICAgIHJldHVybiBzZXR0aW5nQXJyYXkubWFwKG9iamVjdCA9PiB7XG4gICAgICAgIG9iamVjdC5kYXRhYmFzZVRhYmxlTmFtZSA9IHRhYmxlUHJlZml4LmNvbmNhdChvYmplY3QuZGF0YWJhc2VUYWJsZU5hbWUpXG4gICAgICAgIHJldHVybiBvYmplY3RcbiAgICB9KVxufVxuIl19

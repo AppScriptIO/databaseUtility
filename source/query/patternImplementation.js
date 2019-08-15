@@ -1,150 +1,151 @@
-import r from 'rethinkdb'
+"use strict";var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");Object.defineProperty(exports, "__esModule", { value: true });exports.aggregation = aggregation;exports.documentRelatedToAggregation = documentRelatedToAggregation;exports.multipleRelationship = multipleRelationship;exports.getSingleDocumentOfSpecificLanguage = getSingleDocumentOfSpecificLanguage;exports.getMergedMultipleDocumentOfSpecificLanguage = getMergedMultipleDocumentOfSpecificLanguage;exports.getMultipleDocumentVersionOfSpecificLanguage = getMultipleDocumentVersionOfSpecificLanguage;var _rethinkdb = _interopRequireDefault(require("rethinkdb"));
 
-/** 
- * parent has type "aggregation" with array of all related versions in property "version"
- * returns RethinkDB sequence of related version for specific document aggregation.
-*/
-export function aggregation({
-    table,
-    aggregatedDocumentKey
-}) {
-    let aggregatedDocument = table.filter({ key: aggregatedDocumentKey });
 
-    let version =
-        aggregatedDocument
-        .concatMap(function(document) {
-            return document('version')
-        })
-        .concatMap(function(document) {
-            let related = table.getAll(document, { index: 'key' });
-            return related
-        })
-    
-    return version
-}
 
-/** Version aggregation pattern - Get all version documents of a specific aggregation.
- * 
- */
-export async function documentRelatedToAggregation({ // all documents of an article
-    databaseConnection,
-    dataAggregatedKey,
-    dataTableName
-}) {
-    let dataTable = r.db('webappContent').table(dataTableName);
-    let version = 
-        aggregation({ table: dataTable, aggregatedDocumentKey: dataAggregatedKey })
-        .coerceTo('array')
-        .run(databaseConnection);
-    return version
-}
 
-/**
- * relationship table matching two documents from different tables to create multiple-to-multiple relationship
- * the pattern relied on a schema structure of a relationship that includes - relationship key, table1 object, table2 object
- */
-export function multipleRelationship({ 
-    relationshipTable,
-    tableArray = [/* { name, table } */]
- }) {
-    let relationshipSequence = relationshipTable.map(function(document) { return { relationship: document } }) // create field "relationship" with details of the relation (formatting)
-    for (let table of tableArray) {
-        relationshipSequence = 
-            relationshipSequence
-            .concatMap(document => {
-                let comparingKey;
-                comparingKey = r.branch( // check if nested field present i.e. document.relationship.<tableName>
-                    document.hasFields({'relationship': {[table['name']]: true}}), document('relationship')(table['name'])('documentKey'), // if condition and value.
-                    [] // else value
-                )
-                let related = table['table'].getAll(
-                    comparingKey,
-                    { index: 'key' }
-                )
-                return related.map(relatedDocument => {
-                    return document.merge({ [table['name']]: relatedDocument })
-                })
-            })
-    }
-    return relationshipSequence
+
+function aggregation({
+  table,
+  aggregatedDocumentKey })
+{
+  let aggregatedDocument = table.filter({ key: aggregatedDocumentKey });
+
+  let version =
+  aggregatedDocument.
+  concatMap(function (document) {
+    return document('version');
+  }).
+  concatMap(function (document) {
+    let related = table.getAll(document, { index: 'key' });
+    return related;
+  });
+
+  return version;
 }
 
 
-/** aggregation of versions pattern - extract single version of an aggregation that compiles with a specific language relationship
- * 
- */
-export async function getSingleDocumentOfSpecificLanguage ({
-    languageDocumentKey,
-    dataTableName,
-    dataAggregatedKey,
-    databaseConnection
-}) {
-    const contentDatabase = r.db('webappContent')
-    let languageTable = contentDatabase.table('language');
-    let relationshipTable = contentDatabase.table('relationship')  
-    let dataTable = contentDatabase.table(dataTableName);
-    let version = aggregation({ table: dataTable, aggregatedDocumentKey: dataAggregatedKey })
 
-    return await multipleRelationship({
-        relationshipTable, 
-        tableArray: [ { name: dataTableName, table: dataTable }, { name: 'language', table: languageTable } ]
-      })
-      .filter((document) => { return document('language')('key').eq(languageDocumentKey) })
-      .filter((document) => {
-        return version.contains((version) => {
-          return document(dataTableName)('key').eq(version('key'))
-        })
-      })
-      .getField(dataTableName) // extract relationship field of the concerning table.
-      // .coerceTo('array')
-      .nth(0) // select first array item
-      .run(databaseConnection);
-}
 
-/** Aggregation of versions pattern - extract all document of a specific language and merge them to a single object.
- * 
- */
-export async function getMergedMultipleDocumentOfSpecificLanguage({
-    languageDocumentKey,
-    dataTableName,
-    databaseConnection
-}) {
-    const contentDatabase = r.db('webappContent')
-    var dataTable = contentDatabase.table(dataTableName);
-    let languageTable = contentDatabase.table('language');
-    let relationshipTable = contentDatabase.table('relationship')
-  
-    let tableArray = [ { name: dataTableName, table: dataTable }, { name: 'language', table: languageTable } ]
-    let result = await
-        multipleRelationship({ relationshipTable, tableArray })
-        .filter(function(document) { return document('language')('key').eq(languageDocumentKey) })
-        .getField(dataTableName) // from each sequence unit.
-        .reduce((previous, current) => { return previous.merge(current) })
-        // .coerceTo('array')
-        .run(databaseConnection);
-    return result  
+async function documentRelatedToAggregation({
+  databaseConnection,
+  dataAggregatedKey,
+  dataTableName })
+{
+  let dataTable = _rethinkdb.default.db('webappContent').table(dataTableName);
+  let version =
+  aggregation({ table: dataTable, aggregatedDocumentKey: dataAggregatedKey }).
+  coerceTo('array').
+  run(databaseConnection);
+  return version;
 }
 
 
-/** aggregation of versions pattern - extract multiple version document of an aggregation that compiles with a specific language relationship
- * 
- */
-export async function getMultipleDocumentVersionOfSpecificLanguage({
-    databaseConnection,
-    languageDocumentKey,
-    dataTableName
-  }) {
-    const contentDatabase = r.db('webappContent')
-    var article = contentDatabase.table(dataTableName);
-    let language = contentDatabase.table('language');
-    let relationshipTable = contentDatabase.table('relationship')
-  
-    let tableArray = [ { name: dataTableName, table: article }, { name: 'language', table: language } ]
-    let result = await
-        multipleRelationship({ relationshipTable, tableArray })
-        .filter(function(document) { return document('language')('key').eq(languageDocumentKey) })
-        .getField(dataTableName)
-        .coerceTo('array')
-        .run(databaseConnection);
-    return result
+
+
+
+function multipleRelationship({
+  relationshipTable,
+  tableArray = [] })
+{
+  let relationshipSequence = relationshipTable.map(function (document) {return { relationship: document };});
+  for (let table of tableArray) {
+    relationshipSequence =
+    relationshipSequence.
+    concatMap(document => {
+      let comparingKey;
+      comparingKey = _rethinkdb.default.branch(
+      document.hasFields({ 'relationship': { [table['name']]: true } }), document('relationship')(table['name'])('documentKey'),
+      []);
+
+      let related = table['table'].getAll(
+      comparingKey,
+      { index: 'key' });
+
+      return related.map(relatedDocument => {
+        return document.merge({ [table['name']]: relatedDocument });
+      });
+    });
   }
+  return relationshipSequence;
+}
+
+
+
+
+
+async function getSingleDocumentOfSpecificLanguage({
+  languageDocumentKey,
+  dataTableName,
+  dataAggregatedKey,
+  databaseConnection })
+{
+  const contentDatabase = _rethinkdb.default.db('webappContent');
+  let languageTable = contentDatabase.table('language');
+  let relationshipTable = contentDatabase.table('relationship');
+  let dataTable = contentDatabase.table(dataTableName);
+  let version = aggregation({ table: dataTable, aggregatedDocumentKey: dataAggregatedKey });
+
+  return await multipleRelationship({
+    relationshipTable,
+    tableArray: [{ name: dataTableName, table: dataTable }, { name: 'language', table: languageTable }] }).
+
+  filter(document => {return document('language')('key').eq(languageDocumentKey);}).
+  filter(document => {
+    return version.contains(version => {
+      return document(dataTableName)('key').eq(version('key'));
+    });
+  }).
+  getField(dataTableName).
+
+  nth(0).
+  run(databaseConnection);
+}
+
+
+
+
+async function getMergedMultipleDocumentOfSpecificLanguage({
+  languageDocumentKey,
+  dataTableName,
+  databaseConnection })
+{
+  const contentDatabase = _rethinkdb.default.db('webappContent');
+  var dataTable = contentDatabase.table(dataTableName);
+  let languageTable = contentDatabase.table('language');
+  let relationshipTable = contentDatabase.table('relationship');
+
+  let tableArray = [{ name: dataTableName, table: dataTable }, { name: 'language', table: languageTable }];
+  let result = await (
+    multipleRelationship({ relationshipTable, tableArray }).
+    filter(function (document) {return document('language')('key').eq(languageDocumentKey);}).
+    getField(dataTableName).
+    reduce((previous, current) => {return previous.merge(current);}).
+
+    run(databaseConnection));
+  return result;
+}
+
+
+
+
+
+async function getMultipleDocumentVersionOfSpecificLanguage({
+  databaseConnection,
+  languageDocumentKey,
+  dataTableName })
+{
+  const contentDatabase = _rethinkdb.default.db('webappContent');
+  var article = contentDatabase.table(dataTableName);
+  let language = contentDatabase.table('language');
+  let relationshipTable = contentDatabase.table('relationship');
+
+  let tableArray = [{ name: dataTableName, table: article }, { name: 'language', table: language }];
+  let result = await (
+    multipleRelationship({ relationshipTable, tableArray }).
+    filter(function (document) {return document('language')('key').eq(languageDocumentKey);}).
+    getField(dataTableName).
+    coerceTo('array').
+    run(databaseConnection));
+  return result;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL3NvdXJjZS9xdWVyeS9wYXR0ZXJuSW1wbGVtZW50YXRpb24uanMiXSwibmFtZXMiOlsiYWdncmVnYXRpb24iLCJ0YWJsZSIsImFnZ3JlZ2F0ZWREb2N1bWVudEtleSIsImFnZ3JlZ2F0ZWREb2N1bWVudCIsImZpbHRlciIsImtleSIsInZlcnNpb24iLCJjb25jYXRNYXAiLCJkb2N1bWVudCIsInJlbGF0ZWQiLCJnZXRBbGwiLCJpbmRleCIsImRvY3VtZW50UmVsYXRlZFRvQWdncmVnYXRpb24iLCJkYXRhYmFzZUNvbm5lY3Rpb24iLCJkYXRhQWdncmVnYXRlZEtleSIsImRhdGFUYWJsZU5hbWUiLCJkYXRhVGFibGUiLCJyIiwiZGIiLCJjb2VyY2VUbyIsInJ1biIsIm11bHRpcGxlUmVsYXRpb25zaGlwIiwicmVsYXRpb25zaGlwVGFibGUiLCJ0YWJsZUFycmF5IiwicmVsYXRpb25zaGlwU2VxdWVuY2UiLCJtYXAiLCJyZWxhdGlvbnNoaXAiLCJjb21wYXJpbmdLZXkiLCJicmFuY2giLCJoYXNGaWVsZHMiLCJyZWxhdGVkRG9jdW1lbnQiLCJtZXJnZSIsImdldFNpbmdsZURvY3VtZW50T2ZTcGVjaWZpY0xhbmd1YWdlIiwibGFuZ3VhZ2VEb2N1bWVudEtleSIsImNvbnRlbnREYXRhYmFzZSIsImxhbmd1YWdlVGFibGUiLCJuYW1lIiwiZXEiLCJjb250YWlucyIsImdldEZpZWxkIiwibnRoIiwiZ2V0TWVyZ2VkTXVsdGlwbGVEb2N1bWVudE9mU3BlY2lmaWNMYW5ndWFnZSIsInJlc3VsdCIsInJlZHVjZSIsInByZXZpb3VzIiwiY3VycmVudCIsImdldE11bHRpcGxlRG9jdW1lbnRWZXJzaW9uT2ZTcGVjaWZpY0xhbmd1YWdlIiwiYXJ0aWNsZSIsImxhbmd1YWdlIl0sIm1hcHBpbmdzIjoia2xCQUFBOzs7Ozs7QUFNTyxTQUFTQSxXQUFULENBQXFCO0FBQ3hCQyxFQUFBQSxLQUR3QjtBQUV4QkMsRUFBQUEscUJBRndCLEVBQXJCO0FBR0o7QUFD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RUFBQUEsa0JBRCtEO0FBRS9Eb0IsRUFBQUEsbUJBRitEO0FBRy9EbEIsRUFBQUEsYUFIK0QsRUFBNUQ7QUFJRjtBQUNELFFBQU1tQixlQUFlLEdBQUdqQixtQkFBRUMsRUFBRixDQUFLLGVBQUwsQ0FBeEI7QUFDQSxNQUFJNkIsT0FBTyxHQUFHYixlQUFlLENBQUNqQyxLQUFoQixDQUFzQmMsYUFBdEIsQ0FBZDtBQUNBLE1BQUlpQyxRQUFRLEdBQUdkLGVBQWUsQ0FBQ2pDLEtBQWhCLENBQXNCLFVBQXRCLENBQWY7QUFDQSxNQUFJcUIsaUJBQWlCLEdBQUdZLGVBQWUsQ0FBQ2pDLEtBQWhCLENBQXNCLGNBQXRCLENBQXhCOztBQUVBLE1BQUlzQixVQUFVLEdBQUcsQ0FBRSxFQUFFYSxJQUFJLEVBQUVyQixhQUFSLEVBQXVCZCxLQUFLLEVBQUU4QyxPQUE5QixFQUFGLEVBQTJDLEVBQUVYLElBQUksRUFBRSxVQUFSLEVBQW9CbkMsS0FBSyxFQUFFK0MsUUFBM0IsRUFBM0MsQ0FBakI7QUFDQSxNQUFJTixNQUFNLEdBQUc7QUFDVHJCLElBQUFBLG9CQUFvQixDQUFDLEVBQUVDLGlCQUFGLEVBQXFCQyxVQUFyQixFQUFELENBQXBCO0FBQ0NuQixJQUFBQSxNQURELENBQ1EsVUFBU0ksUUFBVCxFQUFtQixDQUFFLE9BQU9BLFFBQVEsQ0FBQyxVQUFELENBQVIsQ0FBcUIsS0FBckIsRUFBNEI2QixFQUE1QixDQUErQkosbUJBQS9CLENBQVAsQ0FBNEQsQ0FEekY7QUFFQ00sSUFBQUEsUUFGRCxDQUVVeEIsYUFGVjtBQUdDSSxJQUFBQSxRQUhELENBR1UsT0FIVjtBQUlDQyxJQUFBQSxHQUpELENBSUtQLGtCQUpMLENBRFMsQ0FBYjtBQU1BLFNBQU82QixNQUFQO0FBQ0QiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgciBmcm9tICdyZXRoaW5rZGInXG5cbi8qKiBcbiAqIHBhcmVudCBoYXMgdHlwZSBcImFnZ3JlZ2F0aW9uXCIgd2l0aCBhcnJheSBvZiBhbGwgcmVsYXRlZCB2ZXJzaW9ucyBpbiBwcm9wZXJ0eSBcInZlcnNpb25cIlxuICogcmV0dXJucyBSZXRoaW5rREIgc2VxdWVuY2Ugb2YgcmVsYXRlZCB2ZXJzaW9uIGZvciBzcGVjaWZpYyBkb2N1bWVudCBhZ2dyZWdhdGlvbi5cbiovXG5leHBvcnQgZnVuY3Rpb24gYWdncmVnYXRpb24oe1xuICAgIHRhYmxlLFxuICAgIGFnZ3JlZ2F0ZWREb2N1bWVudEtleVxufSkge1xuICAgIGxldCBhZ2dyZWdhdGVkRG9jdW1lbnQgPSB0YWJsZS5maWx0ZXIoeyBrZXk6IGFnZ3JlZ2F0ZWREb2N1bWVudEtleSB9KTtcblxuICAgIGxldCB2ZXJzaW9uID1cbiAgICAgICAgYWdncmVnYXRlZERvY3VtZW50XG4gICAgICAgIC5jb25jYXRNYXAoZnVuY3Rpb24oZG9jdW1lbnQpIHtcbiAgICAgICAgICAgIHJldHVybiBkb2N1bWVudCgndmVyc2lvbicpXG4gICAgICAgIH0pXG4gICAgICAgIC5jb25jYXRNYXAoZnVuY3Rpb24oZG9jdW1lbnQpIHtcbiAgICAgICAgICAgIGxldCByZWxhdGVkID0gdGFibGUuZ2V0QWxsKGRvY3VtZW50LCB7IGluZGV4OiAna2V5JyB9KTtcbiAgICAgICAgICAgIHJldHVybiByZWxhdGVkXG4gICAgICAgIH0pXG4gICAgXG4gICAgcmV0dXJuIHZlcnNpb25cbn1cblxuLyoqIFZlcnNpb24gYWdncmVnYXRpb24gcGF0dGVybiAtIEdldCBhbGwgdmVyc2lvbiBkb2N1bWVudHMgb2YgYSBzcGVjaWZpYyBhZ2dyZWdhdGlvbi5cbiAqIFxuICovXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gZG9jdW1lbnRSZWxhdGVkVG9BZ2dyZWdhdGlvbih7IC8vIGFsbCBkb2N1bWVudHMgb2YgYW4gYXJ0aWNsZVxuICAgIGRhdGFiYXNlQ29ubmVjdGlvbixcbiAgICBkYXRhQWdncmVnYXRlZEtleSxcbiAgICBkYXRhVGFibGVOYW1lXG59KSB7XG4gICAgbGV0IGRhdGFUYWJsZSA9IHIuZGIoJ3dlYmFwcENvbnRlbnQnKS50YWJsZShkYXRhVGFibGVOYW1lKTtcbiAgICBsZXQgdmVyc2lvbiA9IFxuICAgICAgICBhZ2dyZWdhdGlvbih7IHRhYmxlOiBkYXRhVGFibGUsIGFnZ3JlZ2F0ZWREb2N1bWVudEtleTogZGF0YUFnZ3JlZ2F0ZWRLZXkgfSlcbiAgICAgICAgLmNvZXJjZVRvKCdhcnJheScpXG4gICAgICAgIC5ydW4oZGF0YWJhc2VDb25uZWN0aW9uKTtcbiAgICByZXR1cm4gdmVyc2lvblxufVxuXG4vKipcbiAqIHJlbGF0aW9uc2hpcCB0YWJsZSBtYXRjaGluZyB0d28gZG9jdW1lbnRzIGZyb20gZGlmZmVyZW50IHRhYmxlcyB0byBjcmVhdGUgbXVsdGlwbGUtdG8tbXVsdGlwbGUgcmVsYXRpb25zaGlwXG4gKiB0aGUgcGF0dGVybiByZWxpZWQgb24gYSBzY2hlbWEgc3RydWN0dXJlIG9mIGEgcmVsYXRpb25zaGlwIHRoYXQgaW5jbHVkZXMgLSByZWxhdGlvbnNoaXAga2V5LCB0YWJsZTEgb2JqZWN0LCB0YWJsZTIgb2JqZWN0XG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBtdWx0aXBsZVJlbGF0aW9uc2hpcCh7IFxuICAgIHJlbGF0aW9uc2hpcFRhYmxlLFxuICAgIHRhYmxlQXJyYXkgPSBbLyogeyBuYW1lLCB0YWJsZSB9ICovXVxuIH0pIHtcbiAgICBsZXQgcmVsYXRpb25zaGlwU2VxdWVuY2UgPSByZWxhdGlvbnNoaXBUYWJsZS5tYXAoZnVuY3Rpb24oZG9jdW1lbnQpIHsgcmV0dXJuIHsgcmVsYXRpb25zaGlwOiBkb2N1bWVudCB9IH0pIC8vIGNyZWF0ZSBmaWVsZCBcInJlbGF0aW9uc2hpcFwiIHdpdGggZGV0YWlscyBvZiB0aGUgcmVsYXRpb24gKGZvcm1hdHRpbmcpXG4gICAgZm9yIChsZXQgdGFibGUgb2YgdGFibGVBcnJheSkge1xuICAgICAgICByZWxhdGlvbnNoaXBTZXF1ZW5jZSA9IFxuICAgICAgICAgICAgcmVsYXRpb25zaGlwU2VxdWVuY2VcbiAgICAgICAgICAgIC5jb25jYXRNYXAoZG9jdW1lbnQgPT4ge1xuICAgICAgICAgICAgICAgIGxldCBjb21wYXJpbmdLZXk7XG4gICAgICAgICAgICAgICAgY29tcGFyaW5nS2V5ID0gci5icmFuY2goIC8vIGNoZWNrIGlmIG5lc3RlZCBmaWVsZCBwcmVzZW50IGkuZS4gZG9jdW1lbnQucmVsYXRpb25zaGlwLjx0YWJsZU5hbWU+XG4gICAgICAgICAgICAgICAgICAgIGRvY3VtZW50Lmhhc0ZpZWxkcyh7J3JlbGF0aW9uc2hpcCc6IHtbdGFibGVbJ25hbWUnXV06IHRydWV9fSksIGRvY3VtZW50KCdyZWxhdGlvbnNoaXAnKSh0YWJsZVsnbmFtZSddKSgnZG9jdW1lbnRLZXknKSwgLy8gaWYgY29uZGl0aW9uIGFuZCB2YWx1ZS5cbiAgICAgICAgICAgICAgICAgICAgW10gLy8gZWxzZSB2YWx1ZVxuICAgICAgICAgICAgICAgIClcbiAgICAgICAgICAgICAgICBsZXQgcmVsYXRlZCA9IHRhYmxlWyd0YWJsZSddLmdldEFsbChcbiAgICAgICAgICAgICAgICAgICAgY29tcGFyaW5nS2V5LFxuICAgICAgICAgICAgICAgICAgICB7IGluZGV4OiAna2V5JyB9XG4gICAgICAgICAgICAgICAgKVxuICAgICAgICAgICAgICAgIHJldHVybiByZWxhdGVkLm1hcChyZWxhdGVkRG9jdW1lbnQgPT4ge1xuICAgICAgICAgICAgICAgICAgICByZXR1cm4gZG9jdW1lbnQubWVyZ2UoeyBbdGFibGVbJ25hbWUnXV06IHJlbGF0ZWREb2N1bWVudCB9KVxuICAgICAgICAgICAgICAgIH0pXG4gICAgICAgICAgICB9KVxuICAgIH1cbiAgICByZXR1cm4gcmVsYXRpb25zaGlwU2VxdWVuY2Vcbn1cblxuXG4vKiogYWdncmVnYXRpb24gb2YgdmVyc2lvbnMgcGF0dGVybiAtIGV4dHJhY3Qgc2luZ2xlIHZlcnNpb24gb2YgYW4gYWdncmVnYXRpb24gdGhhdCBjb21waWxlcyB3aXRoIGEgc3BlY2lmaWMgbGFuZ3VhZ2UgcmVsYXRpb25zaGlwXG4gKiBcbiAqL1xuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGdldFNpbmdsZURvY3VtZW50T2ZTcGVjaWZpY0xhbmd1YWdlICh7XG4gICAgbGFuZ3VhZ2VEb2N1bWVudEtleSxcbiAgICBkYXRhVGFibGVOYW1lLFxuICAgIGRhdGFBZ2dyZWdhdGVkS2V5LFxuICAgIGRhdGFiYXNlQ29ubmVjdGlvblxufSkge1xuICAgIGNvbnN0IGNvbnRlbnREYXRhYmFzZSA9IHIuZGIoJ3dlYmFwcENvbnRlbnQnKVxuICAgIGxldCBsYW5ndWFnZVRhYmxlID0gY29udGVudERhdGFiYXNlLnRhYmxlKCdsYW5ndWFnZScpO1xuICAgIGxldCByZWxhdGlvbnNoaXBUYWJsZSA9IGNvbnRlbnREYXRhYmFzZS50YWJsZSgncmVsYXRpb25zaGlwJykgIFxuICAgIGxldCBkYXRhVGFibGUgPSBjb250ZW50RGF0YWJhc2UudGFibGUoZGF0YVRhYmxlTmFtZSk7XG4gICAgbGV0IHZlcnNpb24gPSBhZ2dyZWdhdGlvbih7IHRhYmxlOiBkYXRhVGFibGUsIGFnZ3JlZ2F0ZWREb2N1bWVudEtleTogZGF0YUFnZ3JlZ2F0ZWRLZXkgfSlcblxuICAgIHJldHVybiBhd2FpdCBtdWx0aXBsZVJlbGF0aW9uc2hpcCh7XG4gICAgICAgIHJlbGF0aW9uc2hpcFRhYmxlLCBcbiAgICAgICAgdGFibGVBcnJheTogWyB7IG5hbWU6IGRhdGFUYWJsZU5hbWUsIHRhYmxlOiBkYXRhVGFibGUgfSwgeyBuYW1lOiAnbGFuZ3VhZ2UnLCB0YWJsZTogbGFuZ3VhZ2VUYWJsZSB9IF1cbiAgICAgIH0pXG4gICAgICAuZmlsdGVyKChkb2N1bWVudCkgPT4geyByZXR1cm4gZG9jdW1lbnQoJ2xhbmd1YWdlJykoJ2tleScpLmVxKGxhbmd1YWdlRG9jdW1lbnRLZXkpIH0pXG4gICAgICAuZmlsdGVyKChkb2N1bWVudCkgPT4ge1xuICAgICAgICByZXR1cm4gdmVyc2lvbi5jb250YWlucygodmVyc2lvbikgPT4ge1xuICAgICAgICAgIHJldHVybiBkb2N1bWVudChkYXRhVGFibGVOYW1lKSgna2V5JykuZXEodmVyc2lvbigna2V5JykpXG4gICAgICAgIH0pXG4gICAgICB9KVxuICAgICAgLmdldEZpZWxkKGRhdGFUYWJsZU5hbWUpIC8vIGV4dHJhY3QgcmVsYXRpb25zaGlwIGZpZWxkIG9mIHRoZSBjb25jZXJuaW5nIHRhYmxlLlxuICAgICAgLy8gLmNvZXJjZVRvKCdhcnJheScpXG4gICAgICAubnRoKDApIC8vIHNlbGVjdCBmaXJzdCBhcnJheSBpdGVtXG4gICAgICAucnVuKGRhdGFiYXNlQ29ubmVjdGlvbik7XG59XG5cbi8qKiBBZ2dyZWdhdGlvbiBvZiB2ZXJzaW9ucyBwYXR0ZXJuIC0gZXh0cmFjdCBhbGwgZG9jdW1lbnQgb2YgYSBzcGVjaWZpYyBsYW5ndWFnZSBhbmQgbWVyZ2UgdGhlbSB0byBhIHNpbmdsZSBvYmplY3QuXG4gKiBcbiAqL1xuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGdldE1lcmdlZE11bHRpcGxlRG9jdW1lbnRPZlNwZWNpZmljTGFuZ3VhZ2Uoe1xuICAgIGxhbmd1YWdlRG9jdW1lbnRLZXksXG4gICAgZGF0YVRhYmxlTmFtZSxcbiAgICBkYXRhYmFzZUNvbm5lY3Rpb25cbn0pIHtcbiAgICBjb25zdCBjb250ZW50RGF0YWJhc2UgPSByLmRiKCd3ZWJhcHBDb250ZW50JylcbiAgICB2YXIgZGF0YVRhYmxlID0gY29udGVudERhdGFiYXNlLnRhYmxlKGRhdGFUYWJsZU5hbWUpO1xuICAgIGxldCBsYW5ndWFnZVRhYmxlID0gY29udGVudERhdGFiYXNlLnRhYmxlKCdsYW5ndWFnZScpO1xuICAgIGxldCByZWxhdGlvbnNoaXBUYWJsZSA9IGNvbnRlbnREYXRhYmFzZS50YWJsZSgncmVsYXRpb25zaGlwJylcbiAgXG4gICAgbGV0IHRhYmxlQXJyYXkgPSBbIHsgbmFtZTogZGF0YVRhYmxlTmFtZSwgdGFibGU6IGRhdGFUYWJsZSB9LCB7IG5hbWU6ICdsYW5ndWFnZScsIHRhYmxlOiBsYW5ndWFnZVRhYmxlIH0gXVxuICAgIGxldCByZXN1bHQgPSBhd2FpdFxuICAgICAgICBtdWx0aXBsZVJlbGF0aW9uc2hpcCh7IHJlbGF0aW9uc2hpcFRhYmxlLCB0YWJsZUFycmF5IH0pXG4gICAgICAgIC5maWx0ZXIoZnVuY3Rpb24oZG9jdW1lbnQpIHsgcmV0dXJuIGRvY3VtZW50KCdsYW5ndWFnZScpKCdrZXknKS5lcShsYW5ndWFnZURvY3VtZW50S2V5KSB9KVxuICAgICAgICAuZ2V0RmllbGQoZGF0YVRhYmxlTmFtZSkgLy8gZnJvbSBlYWNoIHNlcXVlbmNlIHVuaXQuXG4gICAgICAgIC5yZWR1Y2UoKHByZXZpb3VzLCBjdXJyZW50KSA9PiB7IHJldHVybiBwcmV2aW91cy5tZXJnZShjdXJyZW50KSB9KVxuICAgICAgICAvLyAuY29lcmNlVG8oJ2FycmF5JylcbiAgICAgICAgLnJ1bihkYXRhYmFzZUNvbm5lY3Rpb24pO1xuICAgIHJldHVybiByZXN1bHQgIFxufVxuXG5cbi8qKiBhZ2dyZWdhdGlvbiBvZiB2ZXJzaW9ucyBwYXR0ZXJuIC0gZXh0cmFjdCBtdWx0aXBsZSB2ZXJzaW9uIGRvY3VtZW50IG9mIGFuIGFnZ3JlZ2F0aW9uIHRoYXQgY29tcGlsZXMgd2l0aCBhIHNwZWNpZmljIGxhbmd1YWdlIHJlbGF0aW9uc2hpcFxuICogXG4gKi9cbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBnZXRNdWx0aXBsZURvY3VtZW50VmVyc2lvbk9mU3BlY2lmaWNMYW5ndWFnZSh7XG4gICAgZGF0YWJhc2VDb25uZWN0aW9uLFxuICAgIGxhbmd1YWdlRG9jdW1lbnRLZXksXG4gICAgZGF0YVRhYmxlTmFtZVxuICB9KSB7XG4gICAgY29uc3QgY29udGVudERhdGFiYXNlID0gci5kYignd2ViYXBwQ29udGVudCcpXG4gICAgdmFyIGFydGljbGUgPSBjb250ZW50RGF0YWJhc2UudGFibGUoZGF0YVRhYmxlTmFtZSk7XG4gICAgbGV0IGxhbmd1YWdlID0gY29udGVudERhdGFiYXNlLnRhYmxlKCdsYW5ndWFnZScpO1xuICAgIGxldCByZWxhdGlvbnNoaXBUYWJsZSA9IGNvbnRlbnREYXRhYmFzZS50YWJsZSgncmVsYXRpb25zaGlwJylcbiAgXG4gICAgbGV0IHRhYmxlQXJyYXkgPSBbIHsgbmFtZTogZGF0YVRhYmxlTmFtZSwgdGFibGU6IGFydGljbGUgfSwgeyBuYW1lOiAnbGFuZ3VhZ2UnLCB0YWJsZTogbGFuZ3VhZ2UgfSBdXG4gICAgbGV0IHJlc3VsdCA9IGF3YWl0XG4gICAgICAgIG11bHRpcGxlUmVsYXRpb25zaGlwKHsgcmVsYXRpb25zaGlwVGFibGUsIHRhYmxlQXJyYXkgfSlcbiAgICAgICAgLmZpbHRlcihmdW5jdGlvbihkb2N1bWVudCkgeyByZXR1cm4gZG9jdW1lbnQoJ2xhbmd1YWdlJykoJ2tleScpLmVxKGxhbmd1YWdlRG9jdW1lbnRLZXkpIH0pXG4gICAgICAgIC5nZXRGaWVsZChkYXRhVGFibGVOYW1lKVxuICAgICAgICAuY29lcmNlVG8oJ2FycmF5JylcbiAgICAgICAgLnJ1bihkYXRhYmFzZUNvbm5lY3Rpb24pO1xuICAgIHJldHVybiByZXN1bHRcbiAgfSJdfQ==

@@ -1,70 +1,71 @@
-import rethinkDB from 'rethinkdb' 
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.deleteAllDatabase = deleteAllDatabase;exports.createDatabase = createDatabase;exports.createTableAndInsertData = createTableAndInsertData;
 
-export async function deleteAllDatabase(
-    connection,
-    rethinkDB = rethinkDB
-) {
-    let databaseList = await rethinkDB.dbList().run(connection);
-    databaseList = await databaseList.filter(item => item != 'rethinkdb') // remove default 'rethinkdb' database.
-    for (let databaseName of databaseList) {
-        await rethinkDB.dbDrop(databaseName).run(connection)
-    }
+async function deleteAllDatabase(
+connection,
+rethinkDB = rethinkDB)
+{
+  let databaseList = await rethinkDB.dbList().run(connection);
+  databaseList = await databaseList.filter(item => item != 'rethinkdb');
+  for (let databaseName of databaseList) {
+    await rethinkDB.dbDrop(databaseName).run(connection);
+  }
 }
 
-export async function createDatabase(
-    databaseName,
-    connection,
-    rethinkDB = rethinkDB
-) {
-    let databaseExists = await rethinkDB.dbList().contains(databaseName).run(connection)
-    if(!databaseExists) {
-        let dbCreationResponse = await rethinkDB.dbCreate(databaseName).run(connection)
-        
-        // .do(function(databaseExists) {
-        //   return rethinkDB.branch(
-        //     databaseExists,
-        //     { dbs_created: 0 },
-        //     rethinkDB.dbCreate('webapp')
-        //   );
-        // })
+async function createDatabase(
+databaseName,
+connection,
+rethinkDB = rethinkDB)
+{
+  let databaseExists = await rethinkDB.dbList().contains(databaseName).run(connection);
+  if (!databaseExists) {
+    let dbCreationResponse = await rethinkDB.dbCreate(databaseName).run(connection);
 
-        if(dbCreationResponse.dbs_created > 0)  console.log(`📢 ${databaseName} database created !`)
-    } else {
-        console.log(`📢📁 ${databaseName} database already exists !`)            
-    }
+
+
+
+
+
+
+
+
+    if (dbCreationResponse.dbs_created > 0) console.log(`📢 ${databaseName} database created !`);
+  } else {
+    console.log(`📢📁 ${databaseName} database already exists !`);
+  }
 }
 
-export async function createTableAndInsertData(
-    databaseName, 
-    databaseData, 
-    connection,
-    rethinkDB = rethinkDB
-) {
-    for (let tableData of databaseData) {
-        await rethinkDB.db(databaseName).tableCreate(tableData.databaseTableName).run(connection)
-            .then(async tableCreationResponse => {
-                if(tableCreationResponse.tables_created > 0) console.log(`📢 ${tableData.databaseTableName} table created.`)
-                await rethinkDB.db(databaseName).table(tableData.databaseTableName).insert(tableData.data).run(connection)
-                    .then(response => {
-                        console.log(`📢📥 ${response.inserted} documents inserted to ${tableData.databaseTableName}.`)
-                    })
-                    .catch(error => console.log(error))
-            })
-            .catch(error => {
-                if(error.name == 'ReqlOpFailedError') {
-                    console.log(`📢 ${tableData.databaseTableName} table already exists.`) 
-                } else {
-                    console.error(error)
-                }
-            })
+async function createTableAndInsertData(
+databaseName,
+databaseData,
+connection,
+rethinkDB = rethinkDB)
+{
+  for (let tableData of databaseData) {
+    await rethinkDB.db(databaseName).tableCreate(tableData.databaseTableName).run(connection).
+    then(async tableCreationResponse => {
+      if (tableCreationResponse.tables_created > 0) console.log(`📢 ${tableData.databaseTableName} table created.`);
+      await rethinkDB.db(databaseName).table(tableData.databaseTableName).insert(tableData.data).run(connection).
+      then(response => {
+        console.log(`📢📥 ${response.inserted} documents inserted to ${tableData.databaseTableName}.`);
+      }).
+      catch(error => console.log(error));
+    }).
+    catch(error => {
+      if (error.name == 'ReqlOpFailedError') {
+        console.log(`📢 ${tableData.databaseTableName} table already exists.`);
+      } else {
+        console.error(error);
+      }
+    });
 
-        // create index
-        if(tableData.index) {
-            for(let indexField of tableData.index) {
-                await rethinkDB.db(databaseName).table(tableData.databaseTableName).indexCreate(indexField).run(connection)
-                    .then(response => { console.log(`📢 ${tableData.databaseTableName} - created index for field ${indexField}.`) })
-                    .catch(error => console.log(`📢 ${tableData.databaseTableName} - index for field ${indexField} already exists.`))
-                }
-        }
+
+    if (tableData.index) {
+      for (let indexField of tableData.index) {
+        await rethinkDB.db(databaseName).table(tableData.databaseTableName).indexCreate(indexField).run(connection).
+        then(response => {console.log(`📢 ${tableData.databaseTableName} - created index for field ${indexField}.`);}).
+        catch(error => console.log(`📢 ${tableData.databaseTableName} - index for field ${indexField} already exists.`));
+      }
     }
+  }
 }
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uL3NvdXJjZS9pbml0aWFsaXplRGF0YWJhc2UucXVlcnkuanMiXSwibmFtZXMiOlsiZGVsZXRlQWxsRGF0YWJhc2UiLCJjb25uZWN0aW9uIiwicmV0aGlua0RCIiwiZGF0YWJhc2VMaXN0IiwiZGJMaXN0IiwicnVuIiwiZmlsdGVyIiwiaXRlbSIsImRhdGFiYXNlTmFtZSIsImRiRHJvcCIsImNyZWF0ZURhdGFiYXNlIiwiZGF0YWJhc2VFeGlzdHMiLCJjb250YWlucyIsImRiQ3JlYXRpb25SZXNwb25zZSIsImRiQ3JlYXRlIiwiZGJzX2NyZWF0ZWQiLCJjb25zb2xlIiwibG9nIiwiY3JlYXRlVGFibGVBbmRJbnNlcnREYXRhIiwiZGF0YWJhc2VEYXRhIiwidGFibGVEYXRhIiwiZGIiLCJ0YWJsZUNyZWF0ZSIsImRhdGFiYXNlVGFibGVOYW1lIiwidGhlbiIsInRhYmxlQ3JlYXRpb25SZXNwb25zZSIsInRhYmxlc19jcmVhdGVkIiwidGFibGUiLCJpbnNlcnQiLCJkYXRhIiwicmVzcG9uc2UiLCJpbnNlcnRlZCIsImNhdGNoIiwiZXJyb3IiLCJuYW1lIiwiaW5kZXgiLCJpbmRleEZpZWxkIiwiaW5kZXhDcmVhdGUiXSwibWFwcGluZ3MiOiI7O0FBRU8sZUFBZUEsaUJBQWY7QUFDSEMsVUFERztBQUVIQyxTQUFTLEdBQUdBLFNBRlQ7QUFHTDtBQUNFLE1BQUlDLFlBQVksR0FBRyxNQUFNRCxTQUFTLENBQUNFLE1BQVYsR0FBbUJDLEdBQW5CLENBQXVCSixVQUF2QixDQUF6QjtBQUNBRSxFQUFBQSxZQUFZLEdBQUcsTUFBTUEsWUFBWSxDQUFDRyxNQUFiLENBQW9CQyxJQUFJLElBQUlBLElBQUksSUFBSSxXQUFwQyxDQUFyQjtBQUNBLE9BQUssSUFBSUMsWUFBVCxJQUF5QkwsWUFBekIsRUFBdUM7QUFDbkMsVUFBTUQsU0FBUyxDQUFDTyxNQUFWLENBQWlCRCxZQUFqQixFQUErQkgsR0FBL0IsQ0FBbUNKLFVBQW5DLENBQU47QUFDSDtBQUNKOztBQUVN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U0FBUyxDQUFDRyxpQkFBa0Isc0JBQXFCYSxVQUFXLGtCQUE5RSxDQUZkLENBQU47QUFHQztBQUNSO0FBQ0o7QUFDSiIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCByZXRoaW5rREIgZnJvbSAncmV0aGlua2RiJyBcblxuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGRlbGV0ZUFsbERhdGFiYXNlKFxuICAgIGNvbm5lY3Rpb24sXG4gICAgcmV0aGlua0RCID0gcmV0aGlua0RCXG4pIHtcbiAgICBsZXQgZGF0YWJhc2VMaXN0ID0gYXdhaXQgcmV0aGlua0RCLmRiTGlzdCgpLnJ1bihjb25uZWN0aW9uKTtcbiAgICBkYXRhYmFzZUxpc3QgPSBhd2FpdCBkYXRhYmFzZUxpc3QuZmlsdGVyKGl0ZW0gPT4gaXRlbSAhPSAncmV0aGlua2RiJykgLy8gcmVtb3ZlIGRlZmF1bHQgJ3JldGhpbmtkYicgZGF0YWJhc2UuXG4gICAgZm9yIChsZXQgZGF0YWJhc2VOYW1lIG9mIGRhdGFiYXNlTGlzdCkge1xuICAgICAgICBhd2FpdCByZXRoaW5rREIuZGJEcm9wKGRhdGFiYXNlTmFtZSkucnVuKGNvbm5lY3Rpb24pXG4gICAgfVxufVxuXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gY3JlYXRlRGF0YWJhc2UoXG4gICAgZGF0YWJhc2VOYW1lLFxuICAgIGNvbm5lY3Rpb24sXG4gICAgcmV0aGlua0RCID0gcmV0aGlua0RCXG4pIHtcbiAgICBsZXQgZGF0YWJhc2VFeGlzdHMgPSBhd2FpdCByZXRoaW5rREIuZGJMaXN0KCkuY29udGFpbnMoZGF0YWJhc2VOYW1lKS5ydW4oY29ubmVjdGlvbilcbiAgICBpZighZGF0YWJhc2VFeGlzdHMpIHtcbiAgICAgICAgbGV0IGRiQ3JlYXRpb25SZXNwb25zZSA9IGF3YWl0IHJldGhpbmtEQi5kYkNyZWF0ZShkYXRhYmFzZU5hbWUpLnJ1bihjb25uZWN0aW9uKVxuICAgICAgICBcbiAgICAgICAgLy8gLmRvKGZ1bmN0aW9uKGRhdGFiYXNlRXhpc3RzKSB7XG4gICAgICAgIC8vICAgcmV0dXJuIHJldGhpbmtEQi5icmFuY2goXG4gICAgICAgIC8vICAgICBkYXRhYmFzZUV4aXN0cyxcbiAgICAgICAgLy8gICAgIHsgZGJzX2NyZWF0ZWQ6IDAgfSxcbiAgICAgICAgLy8gICAgIHJldGhpbmtEQi5kYkNyZWF0ZSgnd2ViYXBwJylcbiAgICAgICAgLy8gICApO1xuICAgICAgICAvLyB9KVxuXG4gICAgICAgIGlmKGRiQ3JlYXRpb25SZXNwb25zZS5kYnNfY3JlYXRlZCA+IDApICBjb25zb2xlLmxvZyhg8J+ToiAke2RhdGFiYXNlTmFtZX0gZGF0YWJhc2UgY3JlYXRlZCAhYClcbiAgICB9IGVsc2Uge1xuICAgICAgICBjb25zb2xlLmxvZyhg8J+TovCfk4EgJHtkYXRhYmFzZU5hbWV9IGRhdGFiYXNlIGFscmVhZHkgZXhpc3RzICFgKSAgICAgICAgICAgIFxuICAgIH1cbn1cblxuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGNyZWF0ZVRhYmxlQW5kSW5zZXJ0RGF0YShcbiAgICBkYXRhYmFzZU5hbWUsIFxuICAgIGRhdGFiYXNlRGF0YSwgXG4gICAgY29ubmVjdGlvbixcbiAgICByZXRoaW5rREIgPSByZXRoaW5rREJcbikge1xuICAgIGZvciAobGV0IHRhYmxlRGF0YSBvZiBkYXRhYmFzZURhdGEpIHtcbiAgICAgICAgYXdhaXQgcmV0aGlua0RCLmRiKGRhdGFiYXNlTmFtZSkudGFibGVDcmVhdGUodGFibGVEYXRhLmRhdGFiYXNlVGFibGVOYW1lKS5ydW4oY29ubmVjdGlvbilcbiAgICAgICAgICAgIC50aGVuKGFzeW5jIHRhYmxlQ3JlYXRpb25SZXNwb25zZSA9PiB7XG4gICAgICAgICAgICAgICAgaWYodGFibGVDcmVhdGlvblJlc3BvbnNlLnRhYmxlc19jcmVhdGVkID4gMCkgY29uc29sZS5sb2coYPCfk6IgJHt0YWJsZURhdGEuZGF0YWJhc2VUYWJsZU5hbWV9IHRhYmxlIGNyZWF0ZWQuYClcbiAgICAgICAgICAgICAgICBhd2FpdCByZXRoaW5rREIuZGIoZGF0YWJhc2VOYW1lKS50YWJsZSh0YWJsZURhdGEuZGF0YWJhc2VUYWJsZU5hbWUpLmluc2VydCh0YWJsZURhdGEuZGF0YSkucnVuKGNvbm5lY3Rpb24pXG4gICAgICAgICAgICAgICAgICAgIC50aGVuKHJlc3BvbnNlID0+IHtcbiAgICAgICAgICAgICAgICAgICAgICAgIGNvbnNvbGUubG9nKGDwn5Oi8J+TpSAke3Jlc3BvbnNlLmluc2VydGVkfSBkb2N1bWVudHMgaW5zZXJ0ZWQgdG8gJHt0YWJsZURhdGEuZGF0YWJhc2VUYWJsZU5hbWV9LmApXG4gICAgICAgICAgICAgICAgICAgIH0pXG4gICAgICAgICAgICAgICAgICAgIC5jYXRjaChlcnJvciA9PiBjb25zb2xlLmxvZyhlcnJvcikpXG4gICAgICAgICAgICB9KVxuICAgICAgICAgICAgLmNhdGNoKGVycm9yID0+IHtcbiAgICAgICAgICAgICAgICBpZihlcnJvci5uYW1lID09ICdSZXFsT3BGYWlsZWRFcnJvcicpIHtcbiAgICAgICAgICAgICAgICAgICAgY29uc29sZS5sb2coYPCfk6IgJHt0YWJsZURhdGEuZGF0YWJhc2VUYWJsZU5hbWV9IHRhYmxlIGFscmVhZHkgZXhpc3RzLmApIFxuICAgICAgICAgICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgICAgICAgICAgIGNvbnNvbGUuZXJyb3IoZXJyb3IpXG4gICAgICAgICAgICAgICAgfVxuICAgICAgICAgICAgfSlcblxuICAgICAgICAvLyBjcmVhdGUgaW5kZXhcbiAgICAgICAgaWYodGFibGVEYXRhLmluZGV4KSB7XG4gICAgICAgICAgICBmb3IobGV0IGluZGV4RmllbGQgb2YgdGFibGVEYXRhLmluZGV4KSB7XG4gICAgICAgICAgICAgICAgYXdhaXQgcmV0aGlua0RCLmRiKGRhdGFiYXNlTmFtZSkudGFibGUodGFibGVEYXRhLmRhdGFiYXNlVGFibGVOYW1lKS5pbmRleENyZWF0ZShpbmRleEZpZWxkKS5ydW4oY29ubmVjdGlvbilcbiAgICAgICAgICAgICAgICAgICAgLnRoZW4ocmVzcG9uc2UgPT4geyBjb25zb2xlLmxvZyhg8J+ToiAke3RhYmxlRGF0YS5kYXRhYmFzZVRhYmxlTmFtZX0gLSBjcmVhdGVkIGluZGV4IGZvciBmaWVsZCAke2luZGV4RmllbGR9LmApIH0pXG4gICAgICAgICAgICAgICAgICAgIC5jYXRjaChlcnJvciA9PiBjb25zb2xlLmxvZyhg8J+ToiAke3RhYmxlRGF0YS5kYXRhYmFzZVRhYmxlTmFtZX0gLSBpbmRleCBmb3IgZmllbGQgJHtpbmRleEZpZWxkfSBhbHJlYWR5IGV4aXN0cy5gKSlcbiAgICAgICAgICAgICAgICB9XG4gICAgICAgIH1cbiAgICB9XG59XG4iXX0=

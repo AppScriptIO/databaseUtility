@@ -1,29 +1,30 @@
-import r from 'rethinkdb'
+"use strict";var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _rethinkdb = _interopRequireDefault(require("rethinkdb"));
 
 function getTableDocument(tableName) {
-    return async (connection, filterObject) => {
-        let result;
-        if(filterObject) {
-            result = await r
-                .db("webappSetting")
-                .table(tableName)
-                .filter(filterObject)
-                .coerceTo('array')
-                .run(connection)
-            // result = await cursor.toArray(function(err, result) { // convert cursor stream to an array.
-            //     if (err) throw err;
-            //     return result
-            // });
-            return result[0]
-        } else {
-            result = await r
-                .db("webappSetting")
-                .table(tableName)
-                .coerceTo('array')
-                .run(connection)
-            return result
-        }
-    }
-}
+  return async (connection, filterObject) => {
+    let result;
+    if (filterObject) {
+      result = await _rethinkdb.default.
+      db("webappSetting").
+      table(tableName).
+      filter(filterObject).
+      coerceTo('array').
+      run(connection);
 
-export default getTableDocument
+
+
+
+      return result[0];
+    } else {
+      result = await _rethinkdb.default.
+      db("webappSetting").
+      table(tableName).
+      coerceTo('array').
+      run(connection);
+      return result;
+    }
+  };
+}var _default =
+
+getTableDocument;exports.default = _default;
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL3NvdXJjZS9xdWVyeS9nZXRUYWJsZURvY3VtZW50QW5kRmlsdGVyLnF1ZXJ5LmpzIl0sIm5hbWVzIjpbImdldFRhYmxlRG9jdW1lbnQiLCJ0YWJsZU5hbWUiLCJjb25uZWN0aW9uIiwiZmlsdGVyT2JqZWN0IiwicmVzdWx0IiwiciIsImRiIiwidGFibGUiLCJmaWx0ZXIiLCJjb2VyY2VUbyIsInJ1biJdLCJtYXBwaW5ncyI6InlMQUFBOztBQUVBLFNBQVNBLGdCQUFULENBQTBCQyxTQUExQixFQUFxQztBQUNqQyxTQUFPLE9BQU9DLFVBQVAsRUFBbUJDLFlBQW5CLEtBQW9DO0FBQ3ZDLFFBQUlDLE1BQUo7QUFDQSxRQUFHRCxZQUFILEVBQWlCO0FBQ2JDLE1BQUFBLE1BQU0sR0FBRyxNQUFNQztBQUNWQyxNQUFBQSxFQURVLENBQ1AsZUFETztBQUVWQyxNQUFBQSxLQUZVLENBRUpOLFNBRkk7QUFHVk8sTUFBQUEsTUFIVSxDQUdITCxZQUhHO0FBSVZNLE1BQUFBLFFBSlUsQ0FJRCxPQUpDO0FBS1ZDLE1BQUFBLEdBTFUsQ0FLTlIsVUFMTSxDQUFmOzs7OztBQVVBLGFBQU9FLE1BQU0sQ0FBQyxDQUFELENBQWI7QUFDSCxLQVpELE1BWU87QUFDSEEsTUFBQUEsTUFBTSxHQUFHLE1BQU1DO0FBQ1ZDLE1BQUFBLEVBRFUsQ0FDUCxlQURPO0FBRVZDLE1BQUFBLEtBRlUsQ0FFSk4sU0FGSTtBQUdWUSxNQUFBQSxRQUhVLENBR0QsT0FIQztBQUlWQyxNQUFBQSxHQUpVLENBSU5SLFVBSk0sQ0FBZjtBQUtBLGFBQU9FLE1BQVA7QUFDSDtBQUNKLEdBdEJEO0FBdUJILEM7O0FBRWNKLGdCIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHIgZnJvbSAncmV0aGlua2RiJ1xuXG5mdW5jdGlvbiBnZXRUYWJsZURvY3VtZW50KHRhYmxlTmFtZSkge1xuICAgIHJldHVybiBhc3luYyAoY29ubmVjdGlvbiwgZmlsdGVyT2JqZWN0KSA9PiB7XG4gICAgICAgIGxldCByZXN1bHQ7XG4gICAgICAgIGlmKGZpbHRlck9iamVjdCkge1xuICAgICAgICAgICAgcmVzdWx0ID0gYXdhaXQgclxuICAgICAgICAgICAgICAgIC5kYihcIndlYmFwcFNldHRpbmdcIilcbiAgICAgICAgICAgICAgICAudGFibGUodGFibGVOYW1lKVxuICAgICAgICAgICAgICAgIC5maWx0ZXIoZmlsdGVyT2JqZWN0KVxuICAgICAgICAgICAgICAgIC5jb2VyY2VUbygnYXJyYXknKVxuICAgICAgICAgICAgICAgIC5ydW4oY29ubmVjdGlvbilcbiAgICAgICAgICAgIC8vIHJlc3VsdCA9IGF3YWl0IGN1cnNvci50b0FycmF5KGZ1bmN0aW9uKGVyciwgcmVzdWx0KSB7IC8vIGNvbnZlcnQgY3Vyc29yIHN0cmVhbSB0byBhbiBhcnJheS5cbiAgICAgICAgICAgIC8vICAgICBpZiAoZXJyKSB0aHJvdyBlcnI7XG4gICAgICAgICAgICAvLyAgICAgcmV0dXJuIHJlc3VsdFxuICAgICAgICAgICAgLy8gfSk7XG4gICAgICAgICAgICByZXR1cm4gcmVzdWx0WzBdXG4gICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgICByZXN1bHQgPSBhd2FpdCByXG4gICAgICAgICAgICAgICAgLmRiKFwid2ViYXBwU2V0dGluZ1wiKVxuICAgICAgICAgICAgICAgIC50YWJsZSh0YWJsZU5hbWUpXG4gICAgICAgICAgICAgICAgLmNvZXJjZVRvKCdhcnJheScpXG4gICAgICAgICAgICAgICAgLnJ1bihjb25uZWN0aW9uKVxuICAgICAgICAgICAgcmV0dXJuIHJlc3VsdFxuICAgICAgICB9XG4gICAgfVxufVxuXG5leHBvcnQgZGVmYXVsdCBnZXRUYWJsZURvY3VtZW50Il19
