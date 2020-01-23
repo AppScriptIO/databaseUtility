@@ -1,37 +1,38 @@
-/** Non default exports are used for server side requests, bypassing the schema nested unit module */
-import { curried as getTableDocumentCurried } from "./query/getTableDocument.query.js";
-import r from 'rethinkdb'
-import { aggregation, multipleRelationship, getSingleDocumentOfSpecificLanguage, getMergedMultipleDocumentOfSpecificLanguage, getMultipleDocumentVersionOfSpecificLanguage, documentRelatedToAggregation } from 'appscript/utilityFunction/database/query/patternImplementation.js'
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = _default;
 
-export default function({} = {}) {
-    return async function resolver({ portClassInstance, parentResult, args }) {
-        let databaseConnection = portClassInstance.constructor.rethinkdbConnection
-        let context = portClassInstance.context
-        let parameter = context.request.query
-        let databaseName = 'webappContent'
-        const dataTableName = args.databaseTable // from nestedUnit file/extension.
-    
-        // extract parameters of url
-        let dataAggregatedKey = parameter.key
-        let languageDocumentKey = parameter.language
-        let option = parameter.option
-        
-        let result;
-        if(dataAggregatedKey && languageDocumentKey) {
-            result = await getSingleDocumentOfSpecificLanguage({ databaseConnection, dataAggregatedKey, languageDocumentKey, dataTableName})
-        } else if(!dataAggregatedKey && languageDocumentKey) {
-            switch (option) {
-                case 'merged':
-                    result = await getMergedMultipleDocumentOfSpecificLanguage({ dataTableName, languageDocumentKey, databaseConnection })
-                break;
-                default:
-                    result = await getMultipleDocumentVersionOfSpecificLanguage({ databaseConnection, languageDocumentKey, dataTableName })
-                break;
-            }
-        } else if(dataAggregatedKey && !languageDocumentKey) {
-            result = await documentRelatedToAggregation({ databaseConnection, dataAggregatedKey, dataTableName })
-        }
 
-        return result
+var _patternImplementation = require("appscript/utilityFunction/database/query/patternImplementation.js");
+
+function _default({} = {}) {
+  return async function resolver({ portClassInstance, parentResult, args }) {
+    let databaseConnection = portClassInstance.constructor.rethinkdbConnection;
+    let context = portClassInstance.context;
+    let parameter = context.request.query;
+    let databaseName = 'webappContent';
+    const dataTableName = args.databaseTable;
+
+
+    let dataAggregatedKey = parameter.key;
+    let languageDocumentKey = parameter.language;
+    let option = parameter.option;
+
+    let result;
+    if (dataAggregatedKey && languageDocumentKey) {
+      result = await (0, _patternImplementation.getSingleDocumentOfSpecificLanguage)({ databaseConnection, dataAggregatedKey, languageDocumentKey, dataTableName });
+    } else if (!dataAggregatedKey && languageDocumentKey) {
+      switch (option) {
+        case 'merged':
+          result = await (0, _patternImplementation.getMergedMultipleDocumentOfSpecificLanguage)({ dataTableName, languageDocumentKey, databaseConnection });
+          break;
+        default:
+          result = await (0, _patternImplementation.getMultipleDocumentVersionOfSpecificLanguage)({ databaseConnection, languageDocumentKey, dataTableName });
+          break;}
+
+    } else if (dataAggregatedKey && !languageDocumentKey) {
+      result = await (0, _patternImplementation.documentRelatedToAggregation)({ databaseConnection, dataAggregatedKey, dataTableName });
     }
+
+    return result;
+  };
 }
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL3NvdXJjZS9yZXNvbHZlci9hZ2dyZWdhdGlvblBhdHRlcm5SZXNvbHZlci5qcyJdLCJuYW1lcyI6WyJyZXNvbHZlciIsInBvcnRDbGFzc0luc3RhbmNlIiwicGFyZW50UmVzdWx0IiwiYXJncyIsImRhdGFiYXNlQ29ubmVjdGlvbiIsImNvbnN0cnVjdG9yIiwicmV0aGlua2RiQ29ubmVjdGlvbiIsImNvbnRleHQiLCJwYXJhbWV0ZXIiLCJyZXF1ZXN0IiwicXVlcnkiLCJkYXRhYmFzZU5hbWUiLCJkYXRhVGFibGVOYW1lIiwiZGF0YWJhc2VUYWJsZSIsImRhdGFBZ2dyZWdhdGVkS2V5Iiwia2V5IiwibGFuZ3VhZ2VEb2N1bWVudEtleSIsImxhbmd1YWdlIiwib3B0aW9uIiwicmVzdWx0Il0sIm1hcHBpbmdzIjoiOzs7QUFHQTs7QUFFZSxrQkFBUyxLQUFLLEVBQWQsRUFBa0I7QUFDN0IsU0FBTyxlQUFlQSxRQUFmLENBQXdCLEVBQUVDLGlCQUFGLEVBQXFCQyxZQUFyQixFQUFtQ0MsSUFBbkMsRUFBeEIsRUFBbUU7QUFDdEUsUUFBSUMsa0JBQWtCLEdBQUdILGlCQUFpQixDQUFDSSxXQUFsQixDQUE4QkMsbUJBQXZEO0FBQ0EsUUFBSUMsT0FBTyxHQUFHTixpQkFBaUIsQ0FBQ00sT0FBaEM7QUFDQSxRQUFJQyxTQUFTLEdBQUdELE9BQU8sQ0FBQ0UsT0FBUixDQUFnQkMsS0FBaEM7QUFDQSxRQUFJQyxZQUFZLEdBQUcsZUFBbkI7QUFDQSxVQUFNQyxhQUFhLEdBQUdULElBQUksQ0FBQ1UsYUFBM0I7OztBQUdBLFFBQUlDLGlCQUFpQixHQUFHTixTQUFTLENBQUNPLEdBQWxDO0FBQ0EsUUFBSUMsbUJBQW1CLEdBQUdSLFNBQVMsQ0FBQ1MsUUFBcEM7QUFDQSxRQUFJQyxNQUFNLEdBQUdWLFNBQVMsQ0FBQ1UsTUFBdkI7O0FBRUEsUUFBSUMsTUFBSjtBQUNBLFFBQUdMLGlCQUFpQixJQUFJRSxtQkFBeEIsRUFBNkM7QUFDekNHLE1BQUFBLE1BQU0sR0FBRyxNQUFNLGdFQUFvQyxFQUFFZixrQkFBRixFQUFzQlUsaUJBQXRCLEVBQXlDRSxtQkFBekMsRUFBOERKLGFBQTlELEVBQXBDLENBQWY7QUFDSCxLQUZELE1BRU8sSUFBRyxDQUFDRSxpQkFBRCxJQUFzQkUsbUJBQXpCLEVBQThDO0FBQ2pELGNBQVFFLE1BQVI7QUFDSSxhQUFLLFFBQUw7QUFDSUMsVUFBQUEsTUFBTSxHQUFHLE1BQU0sd0VBQTRDLEVBQUVQLGFBQUYsRUFBaUJJLG1CQUFqQixFQUFzQ1osa0JBQXRDLEVBQTVDLENBQWY7QUFDSjtBQUNBO0FBQ0llLFVBQUFBLE1BQU0sR0FBRyxNQUFNLHlFQUE2QyxFQUFFZixrQkFBRixFQUFzQlksbUJBQXRCLEVBQTJDSixhQUEzQyxFQUE3QyxDQUFmO0FBQ0osZ0JBTko7O0FBUUgsS0FUTSxNQVNBLElBQUdFLGlCQUFpQixJQUFJLENBQUNFLG1CQUF6QixFQUE4QztBQUNqREcsTUFBQUEsTUFBTSxHQUFHLE1BQU0seURBQTZCLEVBQUVmLGtCQUFGLEVBQXNCVSxpQkFBdEIsRUFBeUNGLGFBQXpDLEVBQTdCLENBQWY7QUFDSDs7QUFFRCxXQUFPTyxNQUFQO0FBQ0gsR0E3QkQ7QUE4QkgiLCJzb3VyY2VzQ29udGVudCI6WyIvKiogTm9uIGRlZmF1bHQgZXhwb3J0cyBhcmUgdXNlZCBmb3Igc2VydmVyIHNpZGUgcmVxdWVzdHMsIGJ5cGFzc2luZyB0aGUgc2NoZW1hIG5lc3RlZCB1bml0IG1vZHVsZSAqL1xuaW1wb3J0IHsgY3VycmllZCBhcyBnZXRUYWJsZURvY3VtZW50Q3VycmllZCB9IGZyb20gXCIuL3F1ZXJ5L2dldFRhYmxlRG9jdW1lbnQucXVlcnkuanNcIjtcbmltcG9ydCByIGZyb20gJ3JldGhpbmtkYidcbmltcG9ydCB7IGFnZ3JlZ2F0aW9uLCBtdWx0aXBsZVJlbGF0aW9uc2hpcCwgZ2V0U2luZ2xlRG9jdW1lbnRPZlNwZWNpZmljTGFuZ3VhZ2UsIGdldE1lcmdlZE11bHRpcGxlRG9jdW1lbnRPZlNwZWNpZmljTGFuZ3VhZ2UsIGdldE11bHRpcGxlRG9jdW1lbnRWZXJzaW9uT2ZTcGVjaWZpY0xhbmd1YWdlLCBkb2N1bWVudFJlbGF0ZWRUb0FnZ3JlZ2F0aW9uIH0gZnJvbSAnYXBwc2NyaXB0L3V0aWxpdHlGdW5jdGlvbi9kYXRhYmFzZS9xdWVyeS9wYXR0ZXJuSW1wbGVtZW50YXRpb24uanMnXG5cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uKHt9ID0ge30pIHtcbiAgICByZXR1cm4gYXN5bmMgZnVuY3Rpb24gcmVzb2x2ZXIoeyBwb3J0Q2xhc3NJbnN0YW5jZSwgcGFyZW50UmVzdWx0LCBhcmdzIH0pIHtcbiAgICAgICAgbGV0IGRhdGFiYXNlQ29ubmVjdGlvbiA9IHBvcnRDbGFzc0luc3RhbmNlLmNvbnN0cnVjdG9yLnJldGhpbmtkYkNvbm5lY3Rpb25cbiAgICAgICAgbGV0IGNvbnRleHQgPSBwb3J0Q2xhc3NJbnN0YW5jZS5jb250ZXh0XG4gICAgICAgIGxldCBwYXJhbWV0ZXIgPSBjb250ZXh0LnJlcXVlc3QucXVlcnlcbiAgICAgICAgbGV0IGRhdGFiYXNlTmFtZSA9ICd3ZWJhcHBDb250ZW50J1xuICAgICAgICBjb25zdCBkYXRhVGFibGVOYW1lID0gYXJncy5kYXRhYmFzZVRhYmxlIC8vIGZyb20gbmVzdGVkVW5pdCBmaWxlL2V4dGVuc2lvbi5cbiAgICBcbiAgICAgICAgLy8gZXh0cmFjdCBwYXJhbWV0ZXJzIG9mIHVybFxuICAgICAgICBsZXQgZGF0YUFnZ3JlZ2F0ZWRLZXkgPSBwYXJhbWV0ZXIua2V5XG4gICAgICAgIGxldCBsYW5ndWFnZURvY3VtZW50S2V5ID0gcGFyYW1ldGVyLmxhbmd1YWdlXG4gICAgICAgIGxldCBvcHRpb24gPSBwYXJhbWV0ZXIub3B0aW9uXG4gICAgICAgIFxuICAgICAgICBsZXQgcmVzdWx0O1xuICAgICAgICBpZihkYXRhQWdncmVnYXRlZEtleSAmJiBsYW5ndWFnZURvY3VtZW50S2V5KSB7XG4gICAgICAgICAgICByZXN1bHQgPSBhd2FpdCBnZXRTaW5nbGVEb2N1bWVudE9mU3BlY2lmaWNMYW5ndWFnZSh7IGRhdGFiYXNlQ29ubmVjdGlvbiwgZGF0YUFnZ3JlZ2F0ZWRLZXksIGxhbmd1YWdlRG9jdW1lbnRLZXksIGRhdGFUYWJsZU5hbWV9KVxuICAgICAgICB9IGVsc2UgaWYoIWRhdGFBZ2dyZWdhdGVkS2V5ICYmIGxhbmd1YWdlRG9jdW1lbnRLZXkpIHtcbiAgICAgICAgICAgIHN3aXRjaCAob3B0aW9uKSB7XG4gICAgICAgICAgICAgICAgY2FzZSAnbWVyZ2VkJzpcbiAgICAgICAgICAgICAgICAgICAgcmVzdWx0ID0gYXdhaXQgZ2V0TWVyZ2VkTXVsdGlwbGVEb2N1bWVudE9mU3BlY2lmaWNMYW5ndWFnZSh7IGRhdGFUYWJsZU5hbWUsIGxhbmd1YWdlRG9jdW1lbnRLZXksIGRhdGFiYXNlQ29ubmVjdGlvbiB9KVxuICAgICAgICAgICAgICAgIGJyZWFrO1xuICAgICAgICAgICAgICAgIGRlZmF1bHQ6XG4gICAgICAgICAgICAgICAgICAgIHJlc3VsdCA9IGF3YWl0IGdldE11bHRpcGxlRG9jdW1lbnRWZXJzaW9uT2ZTcGVjaWZpY0xhbmd1YWdlKHsgZGF0YWJhc2VDb25uZWN0aW9uLCBsYW5ndWFnZURvY3VtZW50S2V5LCBkYXRhVGFibGVOYW1lIH0pXG4gICAgICAgICAgICAgICAgYnJlYWs7XG4gICAgICAgICAgICB9XG4gICAgICAgIH0gZWxzZSBpZihkYXRhQWdncmVnYXRlZEtleSAmJiAhbGFuZ3VhZ2VEb2N1bWVudEtleSkge1xuICAgICAgICAgICAgcmVzdWx0ID0gYXdhaXQgZG9jdW1lbnRSZWxhdGVkVG9BZ2dyZWdhdGlvbih7IGRhdGFiYXNlQ29ubmVjdGlvbiwgZGF0YUFnZ3JlZ2F0ZWRLZXksIGRhdGFUYWJsZU5hbWUgfSlcbiAgICAgICAgfVxuXG4gICAgICAgIHJldHVybiByZXN1bHRcbiAgICB9XG59Il19
